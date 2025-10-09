@@ -1,26 +1,32 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: white;
+}
+
+/* ボタン共通スタイル（Tailwind拡張用） */
+button {
+  @apply rounded-2xl px-6 py-2 font-medium transition-all duration-200;
+}
+
+button:hover {
+  @apply opacity-80;
+}
+
+/* ドラッグエリアのホバー効果 */
+.drop-zone {
+  @apply border-2 border-dashed border-gray-400 rounded-2xl
+         w-[400px] h-[180px] flex items-center justify-center text-center
+         transition-colors duration-300;
+}
+
+.drop-zone:hover {
+  @apply border-blue-400 bg-blue-50;
+}
+
+/* 画像表示領域のアニメーション */
+img {
+  @apply transition-all duration-300;
 }
