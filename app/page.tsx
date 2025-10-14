@@ -7,7 +7,6 @@ export default function Home() {
   const [maskedImage, setMaskedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 画像選択またはドロップ時
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -17,15 +16,12 @@ export default function Home() {
     }
   };
 
-  // マスクボタン押下時
   const handleMask = async () => {
     if (!image) return alert("先に画像を選択してください。");
     setLoading(true);
 
     try {
-      // Base64のヘッダーを除去して送信
       const base64Data = image.split(",")[1];
-
       const res = await fetch("/api/mask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,10 +44,8 @@ export default function Home() {
     <main className="flex flex-col items-center justify-center min-h-screen gap-6 p-6">
       <h1 className="text-2xl font-bold">画像マスク処理デモ</h1>
 
-      {/* アップロードフォーム */}
       <input type="file" accept="image/*" onChange={handleFileChange} />
 
-      {/* 元画像プレビュー */}
       {image && (
         <div className="mt-4">
           <p className="font-semibold text-gray-700 mb-1">元画像:</p>
@@ -59,7 +53,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* マスクボタン */}
       {image && (
         <button
           onClick={handleMask}
@@ -70,7 +63,6 @@ export default function Home() {
         </button>
       )}
 
-      {/* 結果画像 */}
       {maskedImage && (
         <div className="mt-6">
           <p className="font-semibold text-gray-700 mb-1">マスク後の画像:</p>

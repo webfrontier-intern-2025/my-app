@@ -2,31 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* body の背景色だけ残す */
 body {
   background-color: white;
-}
-
-/* ボタン共通スタイル（Tailwind拡張用） */
-button {
-  @apply rounded-2xl px-6 py-2 font-medium transition-all duration-200;
-}
-
-button:hover {
-  @apply opacity-80;
-}
-
-/* ドラッグエリアのホバー効果 */
-.drop-zone {
-  @apply border-2 border-dashed border-gray-400 rounded-2xl
-         w-[400px] h-[180px] flex items-center justify-center text-center
-         transition-colors duration-300;
-}
-
-.drop-zone:hover {
-  @apply border-blue-400 bg-blue-50;
-}
-
-/* 画像表示領域のアニメーション */
-img {
-  @apply transition-all duration-300;
 }
