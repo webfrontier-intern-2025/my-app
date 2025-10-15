@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // マスク処理（黒塗り→ニコちゃん画像）
+    
     const imgBuffer = Buffer.from(base64, "base64");
     let img = sharp(imgBuffer).png();
 

@@ -6,19 +6,28 @@ export default function Home() {
   const [image, setImage] = useState<string | null>(null);
   const [maskedImage, setMaskedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // 🔹追加
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = () => setImage(reader.result as string);
+      reader.onload = () => {
+        setImage(reader.result as string);
+        setErrorMessage(null); // 新しい画像を選んだら前回のエラーをリセット
+      };
       reader.readAsDataURL(file);
     }
   };
 
   const handleMask = async () => {
-    if (!image) return alert("先に画像を選択してください。");
+    if (!image) {
+      setErrorMessage("先に画像を選択してください。");
+      return;
+    }
+
     setLoading(true);
+    setErrorMessage(null); // 前回のエラーをクリア
 
     try {
       const base64Data = image.split(",")[1];
@@ -28,13 +37,26 @@ export default function Home() {
         body: JSON.stringify({ image: base64Data }),
       });
 
-      if (!res.ok) throw new Error("マスク処理に失敗しました。");
+      // ❌ エラー時
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
 
+        // Face API 側で「顔検出失敗」の場合を想定
+        if (errorData.error?.includes("face not detected")) {
+          setErrorMessage("顔を検知できませんでした。別の画像をお試しください。");
+        } else {
+          setErrorMessage("マスク処理に失敗しました。");
+        }
+
+        return; // 処理を中断
+      }
+
+      // ✅ 成功時
       const data = await res.json();
       setMaskedImage(`data:image/png;base64,${data.maskedImage}`);
     } catch (err) {
       console.error(err);
-      alert("エラーが発生しました。コンソールを確認してください。");
+      setErrorMessage("通信エラーが発生しました。");
     } finally {
       setLoading(false);
     }
@@ -43,6 +65,7 @@ export default function Home() {
   const handleReset = () => {
     setImage(null);
     setMaskedImage(null);
+    setErrorMessage(null);
   };
 
   return (
@@ -80,6 +103,13 @@ export default function Home() {
               />
             )}
           </div>
+
+          {/* エラーメッセージ表示部分 */}
+          {errorMessage && (
+            <p className="text-red-600 font-medium mt-4 text-center whitespace-pre-line">
+              {errorMessage}
+            </p>
+          )}
 
           {/* ボタンエリア */}
           <div className="flex gap-8 mt-8">

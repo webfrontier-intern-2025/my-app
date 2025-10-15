@@ -16,7 +16,7 @@ export default function UploadPage() {
     const reader = new FileReader();
     reader.onloadend = () => {
       setImage(reader.result as string);
-      setErrorMessage(null);
+      setErrorMessage(null); // 新しい画像選択時にエラーをリセット
     };
     reader.readAsDataURL(file);
   };
@@ -40,10 +40,14 @@ export default function UploadPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        // サーバー側からのエラーメッセージを表示
-        setErrorMessage(data.error || "アップロードに失敗しました。");
+        // Face API 側で顔が検出できなかった場合のエラーを想定
+        if (data.error?.includes("face not detected")) {
+          setErrorMessage("顔を検知できませんでした。別の画像をお試しください。");
+        } else {
+          setErrorMessage(data.error || "アップロードに失敗しました。");
+        }
       } else {
-        // 結果ページへ遷移（Base64をクエリに渡す or 状態共有）
+        // 検出成功 → 結果ページへ遷移
         router.push(`/mask?img=${encodeURIComponent(data.maskedImage)}`);
       }
     } catch (err) {
