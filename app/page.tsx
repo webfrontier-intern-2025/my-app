@@ -40,34 +40,80 @@ export default function Home() {
     }
   };
 
+  const handleReset = () => {
+    setImage(null);
+    setMaskedImage(null);
+  };
+
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen gap-6 p-6">
-      <h1 className="text-2xl font-bold">画像マスク処理デモ</h1>
+    <main className="flex flex-col items-center justify-center min-h-screen bg-white p-6">
+      {!maskedImage ? (
+        <>
+          <h1 className="text-lg font-medium mb-6">顔をマスクする</h1>
 
-      <input type="file" accept="image/*" onChange={handleFileChange} />
+          {/* ドロップエリア */}
+          <div className="border border-gray-400 rounded-2xl p-10 text-center w-[500px] min-h-[200px] flex flex-col items-center justify-center">
+            {!image ? (
+              <>
+                <p className="text-gray-600 mb-4">
+                  ここに画像をドラッグ・アンド・ドロップしてください。
+                </p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="fileInput"
+                />
+                <label
+                  htmlFor="fileInput"
+                  className="cursor-pointer text-blue-600 underline"
+                >
+                  画像を選択
+                </label>
+              </>
+            ) : (
+              <img
+                src={image}
+                alt="original"
+                className="max-w-[200px] max-h-[200px] rounded-lg"
+              />
+            )}
+          </div>
 
-      {image && (
-        <div className="mt-4">
-          <p className="font-semibold text-gray-700 mb-1">元画像:</p>
-          <img src={image} alt="original" className="max-w-xs rounded-lg shadow" />
-        </div>
-      )}
+          {/* ボタンエリア */}
+          <div className="flex gap-8 mt-8">
+            <button
+              onClick={handleReset}
+              className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600"
+            >
+              画像を削除
+            </button>
 
-      {image && (
-        <button
-          onClick={handleMask}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-        >
-          {loading ? "マスク処理中..." : "マスク"}
-        </button>
-      )}
-
-      {maskedImage && (
-        <div className="mt-6">
-          <p className="font-semibold text-gray-700 mb-1">マスク後の画像:</p>
-          <img src={maskedImage} alt="masked" className="max-w-xs rounded-lg shadow" />
-        </div>
+            <button
+              onClick={handleMask}
+              disabled={!image || loading}
+              className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50"
+            >
+              {loading ? "マスク中..." : "画像をマスク"}
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* マスク後の表示 */}
+          <img
+            src={maskedImage}
+            alt="masked"
+            className="max-w-[250px] max-h-[250px] rounded-lg mb-8"
+          />
+          <button
+            onClick={handleReset}
+            className="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600"
+          >
+            戻る
+          </button>
+        </>
       )}
     </main>
   );

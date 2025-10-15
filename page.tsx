@@ -1,82 +1,77 @@
 "use client";
-
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useRef, useState } from "react";
 
 export default function Home() {
+  const router = useRouter();
   const [image, setImage] = useState<string | null>(null);
-  const [maskedImage, setMaskedImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // 画像選択またはドロップ時
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  const toDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => setImage(reader.result as string);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
       reader.readAsDataURL(file);
-    }
+    });
+
+  const handleFiles = useCallback(async (file: File) => {
+    const dataUrl = await toDataUrl(file);
+    setImage(dataUrl);
+    sessionStorage.setItem("uploadedImage", dataUrl);
+  }, []);
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) await handleFiles(f);
   };
 
-  // マスクボタン押下時
-  const handleMask = async () => {
-    if (!image) return alert("先に画像を選択してください。");
-    setLoading(true);
+  const onDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) await handleFiles(f);
+  };
 
-    try {
-      // Base64のヘッダーを除去して送信
-      const base64Data = image.split(",")[1];
-
-      const res = await fetch("/api/mask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64Data }),
-      });
-
-      if (!res.ok) throw new Error("マスク処理に失敗しました。");
-
-      const data = await res.json();
-      setMaskedImage(`data:image/png;base64,${data.maskedImage}`);
-    } catch (err) {
-      console.error(err);
-      alert("エラーが発生しました。コンソールを確認してください。");
-    } finally {
-      setLoading(false);
+  const onSend = () => {
+    if (!image) {
+      alert("画像を選択してください。");
+      return;
     }
+    router.push("/upload");
+  };
+
+  const onDelete = () => {
+    setImage(null);
+    sessionStorage.removeItem("uploadedImage");
+    if (inputRef.current) inputRef.current.value = "";
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen gap-6 p-6">
-      <h1 className="text-2xl font-bold">画像マスク処理デモ</h1>
+    <main className="min-h-screen flex flex-col items-center justify-start p-8">
+      <h1 className="text-xl mb-6">顔をマスクする</h1>
 
-      {/* アップロードフォーム */}
-      <input type="file" accept="image/*" onChange={handleFileChange} />
+      <div
+        onDrop={onDrop}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        className={`drop-zone ${dragOver ? "drop-zone--over" : ""}`}
+      >
+        {image ? (
+          <img src={image} alt="preview" className="max-h-40 object-contain" />
+        ) : (
+          <div className="text-gray-600">ここに画像をドラッグ・アンド・ドロップしてください。<br/>または下の「画像を選択」から</div>
+        )}
+      </div>
 
-      {/* 元画像プレビュー */}
-      {image && (
-        <div className="mt-4">
-          <p className="font-semibold text-gray-700 mb-1">元画像:</p>
-          <img src={image} alt="original" className="max-w-xs rounded-lg shadow" />
-        </div>
-      )}
+      <input ref={inputRef} type="file" accept="image/*" onChange={onFileChange} className="hidden" id="file-input" />
 
-      {/* マスクボタン */}
-      {image && (
-        <button
-          onClick={handleMask}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-        >
-          {loading ? "マスク処理中..." : "マスク"}
-        </button>
-      )}
-
-      {/* 結果画像 */}
-      {maskedImage && (
-        <div className="mt-6">
-          <p className="font-semibold text-gray-700 mb-1">マスク後の画像:</p>
-          <img src={maskedImage} alt="masked" className="max-w-xs rounded-lg shadow" />
-        </div>
-      )}
+      <div className="mt-6 flex gap-8">
+        <label htmlFor="file-input" className="px-6 py-3 bg-blue-500 text-white rounded-lg cursor-pointer">画像を選択</label>
+        <button onClick={onDelete} className="px-6 py-3 bg-blue-500 text-white rounded-lg">画像を削除</button>
+        <button onClick={onSend} className="px-6 py-3 bg-blue-500 text-white rounded-lg">画像を送信</button>
+      </div>
     </main>
   );
 }
